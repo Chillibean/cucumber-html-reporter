@@ -4,9 +4,9 @@
 <div class="row" xmlns="http://www.w3.org/1999/html">
 <% } %>
 <% if (feature.scenarios.failed) { %>
-<div class="feature-failed">
+<div class="feature-failed <%= feature.scenarios.retried ? 'feature-retried' : ''%>">
 <% } else { %>
-<div class="feature-passed">
+<div class="feature-passed <%= feature.scenarios.retried ? 'feature-retried' : ''%>">
 <% } %>
     <div class="col-lg-<%= columnLayoutWidth %> col-md-<%= columnLayoutWidth %>">
         <div class="panel panel-default">
