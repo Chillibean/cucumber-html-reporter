@@ -4,9 +4,9 @@
 <div class="row" xmlns="http://www.w3.org/1999/html">
 <% } %>
 <% if (feature.scenarios.failed) { %>
-<div class="feature-failed">
+<div class="feature-failed <%= feature.scenarios.retried ? 'feature-retried' : ''%>">
 <% } else { %>
-<div class="feature-passed">
+<div class="feature-passed <%= feature.scenarios.retried ? 'feature-retried' : ''%>">
 <% } %>
     <div class="col-lg-<%= columnLayoutWidth %> col-md-<%= columnLayoutWidth %>">
         <div class="panel panel-default">
@@ -34,6 +34,8 @@
                                                           title="<%= feature.scenarios.skipped %> Scenarios Skipped"><%= feature.scenarios.skipped %></span><% } %>
               <% if (feature.scenarios.ambiguous) { %><span class="label label-primary"
                                                             title="<%= feature.scenarios.ambiguous %> Ambiguous Scenarios"><%= feature.scenarios.ambiguous %></span><% } %>
+              <% if (feature.scenarios.retried) { %><span class="label retried"
+                                                            title="<%= feature.scenarios.retried %> Retried Scenarios"><%= feature.scenarios.retried %></span><% } %>
                         </span>
                     </a>
                 </h4>
@@ -43,7 +45,10 @@
                     <% if (feature.description) { %>
                     <div class="description"><%= feature.description.replace(/\n/g, '<br/>') %></div>
                     <% } %>
+                    <% var retriedScenarioId = {} %>
                     <% _.each(feature.elements, function(element, scenarioIndex) { %>
+                    <% var scenariosRetried = feature.elements.find((scenario, scenarioInd) => scenario.id == element.id && scenarioIndex != scenarioInd) %>
+                    <% var retriedScenarios = feature.elements.filter((feaatureElement, feaatureElementIndex) => feaatureElement.id == element.id ) %>
                     <% var scenarioId = guid(); %>
                     <div class="panel panel-default">
                         <div class="panel-heading">
@@ -65,17 +70,17 @@
                                         </div>
                                         <div>
                             <span class="label-container">
-                              <% if (element.passed) { %><span class="label label-success"
+                              <% if (element.passed) { %><span class="<%= element.retried ? 'label retried' : 'label label-success' %>"
                                                                title="<%= element.passed %> Steps Passed"><%= element.passed %></span><% } %>
-                              <% if (element.notdefined) { %><span class="label label-info"
+                              <% if (element.notdefined) { %><span class="<%= element.retried ? 'label retried' : 'label label-info' %>"
                                                                    title="<%= element.notdefined %> Steps Undefined"><%= element.notdefined %></span><% } %>
-                              <% if (element.pending) { %><span class="label label-default"
+                              <% if (element.pending) { %><span class="<%= element.retried ? 'label retried' : 'label label-default' %>"
                                                                 title="<%= element.pending %> Steps Pending"><%= element.pending %></span><% } %>
-                              <% if (element.skipped) { %><span class="label label-warning"
+                              <% if (element.skipped) { %><span class="<%= element.retried ? 'label retried' : 'label label-warning' %>"
                                                                 title="<%= element.skipped %> Steps Skipped"><%= element.skipped %></span><% } %>
-                              <% if (element.failed) { %><span class="label label-danger"
+                              <% if (element.failed) { %><span class="<%= element.retried ? 'label retried' : 'label label-danger' %>"
                                                                title="<%= element.failed %> Steps Failed"><%= element.failed %></span><% } %>
-                              <% if (element.ambiguous) { %><span class="label label-primary"
+                              <% if (element.ambiguous) { %><span class="<%= element.retried ? 'label retried' : 'label label-primary' %>"
                                                                   title="<%= element.ambiguous %> Ambiguous Steps"><%= element.ambiguous %></span><% } %>
                             </span>
                                         </div>
@@ -286,28 +291,29 @@
 
                                 <% } %>
 
-                                    <% if (step.image) { %>
-                                <a href="#ss<%= featureIndex %>_<%= scenarioIndex %><%= stepIndex %>"
-                                    data-toggle="collapse" class="toggle">Screenshot +</a>
-                                <div id="ss<%= featureIndex %>_<%= scenarioIndex %><%= stepIndex %>"
+                                    <% if (step.image && step.image.length) { %>
+                                        <% _.each(step.image, function(image, imgIndex) { %>
+                                <a href="#ss<%= featureIndex %>_<%= scenarioIndex %><%= stepIndex %><%= imgIndex %>"
+                                    data-toggle="collapse" class="toggle">Screenshot <%= imgIndex + 1 %> +</a>
+                                <div id="ss<%= featureIndex %>_<%= scenarioIndex %><%= stepIndex %><%= imgIndex %>"
                                     class="screenshot collapse">
                                     <pre class="info show-modal"
                                         data-toggle="modal"
                                         style="cursor: pointer"
-                                        data-target="#ss-modal-<%= featureIndex %>_<%= scenarioIndex %><%= stepIndex %>">
+                                        data-target="#ss-modal-<%= featureIndex %>_<%= scenarioIndex %><%= stepIndex %><%= imgIndex %>">
                                         
                                         <img class="screenshot" style="height:100%;width:100%;display:block;"
-                                        id="ss-image-<%= featureIndex %>_<%= scenarioIndex %><%= stepIndex %>" src="<%= step.image %>"/>
+                                        id="ss-image-<%= featureIndex %>_<%= scenarioIndex %><%= stepIndex %><%= imgIndex %>" src="<%= image %>"/>
                                 </div>
                                 <div class="screenshot collapse"
                                    style="cursor: pointer"
 
                                    data-toggle="modal"
-                                   data-target="#ss-modal-<%= featureIndex %>_<%= scenarioIndex %><%= stepIndex %>">
+                                   data-target="#ss-modal-<%= featureIndex %>_<%= scenarioIndex %><%= stepIndex %><%= imgIndex %>">
 
                                 </div>
 
-                                <div class="modal fade" id="ss-modal-<%= featureIndex %>_<%= scenarioIndex %><%= stepIndex %>" tabindex="-1" role="dialog"
+                                <div class="modal fade" id="ss-modal-<%= featureIndex %>_<%= scenarioIndex %><%= stepIndex %><%= imgIndex %>" tabindex="-1" role="dialog"
                                      aria-labelledby="stacktraceModalLabel" aria-hidden="true">
                                     <div class="modal-dialog modal-lg">
                                         <div class="modal-content">
@@ -316,13 +322,13 @@
                                                         aria-label="Close"><span aria-hidden="true">&times;</span>
                                                 </button>
                                                 <h4 class="modal-title" id="ss-modal-title">
-                                                    Screenshot
+                                                    Screenshot <%= imgIndex + 1 %>
                                                 </h4>
                                             </div>
 
                                             <div class="modal-body">
                                                 <img class="screenshot" style="height:100%;width:100%;"
-                                                     id="my-ss-images" src="<%= step.image %>"/>
+                                                     id="my-ss-images" src="<%= image %>"/>
                                             </div>
 
                                             <div class="modal-footer">
@@ -333,7 +339,7 @@
                                         </div>
                                     </div>
                                 </div>
-
+                                    <% }); %>
                                 <% } %>
 
                                     <% } %>

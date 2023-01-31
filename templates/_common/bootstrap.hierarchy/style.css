@@ -260,3 +260,11 @@ pre {
 .feature-failed{
     display: block;
 }
+
+.feature-retried{
+    display: block;
+}
+
+.label.retried{
+  background:#5b4282;
+}
